@@ -10,22 +10,6 @@
       <span class="live" :class="{ off: !hasEvents }"><span class="ld"></span>streaming</span>
     </div>
 
-    <!-- Agent tags -->
-    <div v-if="displayedAgentIds.length > 0" class="agent-chips">
-      <button
-        v-for="agentId in displayedAgentIds"
-        :key="agentId"
-        class="chip-agent"
-        :class="{ sleeping: !isAgentActive(agentId) }"
-        :style="{ '--c': getHexColorForApp(getAppNameFromAgentId(agentId)) }"
-        @click="emit('selectAgent', agentId)"
-        :title="`${isAgentActive(agentId) ? 'Active' : 'Sleeping'} · click to ${'add/remove'} ${agentId} in comparison lanes`"
-      >
-        <span class="cdot"></span>
-        <span class="mono">{{ agentId }}</span>
-      </button>
-    </div>
-
     <!-- Search -->
     <div class="search-wrap">
       <div class="search" :class="{ 'has-error': !!searchError }">
@@ -47,7 +31,7 @@
       </div>
     </div>
 
-    <!-- Feed -->
+    <!-- Feed (newest on top) -->
     <div ref="scrollContainer" class="feed" @scroll="handleScroll">
       <TransitionGroup name="event" tag="div" class="feed-list">
         <EventRow
@@ -86,34 +70,16 @@ const props = defineProps<{
     sessionId: string;
     eventType: string;
   };
-  stickToBottom: boolean;
-  uniqueAppNames?: string[]; // Agent IDs (app:session) active in current time window
-  allAppNames?: string[]; // All agent IDs (app:session) ever seen in session
+  stickToBottom: boolean; // "follow newest" — with newest-on-top this means stick to the TOP
 }>();
 
 const emit = defineEmits<{
   'update:stickToBottom': [value: boolean];
-  selectAgent: [agentName: string];
 }>();
 
 const scrollContainer = ref<HTMLElement>();
 const { getGradientForSession, getColorForSession, getGradientForApp, getColorForApp, getHexColorForApp } = useEventColors();
 const { searchPattern, searchError, searchEvents, updateSearchPattern, clearSearch } = useEventSearch();
-
-// Use all agent IDs, preferring allAppNames if available (all ever seen), fallback to uniqueAppNames (active in time window)
-const displayedAgentIds = computed(() => {
-  return props.allAppNames?.length ? props.allAppNames : (props.uniqueAppNames || []);
-});
-
-// Extract app name from agent ID (format: "app:session")
-const getAppNameFromAgentId = (agentId: string): string => {
-  return agentId.split(':')[0];
-};
-
-// Check if an agent is currently active (has events in the current time window)
-const isAgentActive = (agentId: string): boolean => {
-  return (props.uniqueAppNames || []).includes(agentId);
-};
 
 const filteredEvents = computed(() => {
   let filtered = props.events.filter(event => {
@@ -134,7 +100,8 @@ const filteredEvents = computed(() => {
     filtered = searchEvents(filtered, searchPattern.value);
   }
 
-  return filtered;
+  // Newest first: events arrive oldest-first, so reverse for top-of-feed display
+  return filtered.slice().reverse();
 });
 
 const hasEvents = computed(() => props.events.length > 0);
@@ -146,33 +113,33 @@ const countSuffix = computed(() =>
   isNarrowed.value ? `of ${props.events.length.toLocaleString()}` : (shownCount.value === 1 ? 'event' : 'events')
 );
 
-const scrollToBottom = () => {
+// Follow newest: with newest-on-top, "following" means pinned to the TOP of the feed
+const scrollToNewest = () => {
   if (scrollContainer.value) {
-    scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight;
+    scrollContainer.value.scrollTop = 0;
   }
 };
 
 const handleScroll = () => {
   if (!scrollContainer.value) return;
 
-  const { scrollTop, scrollHeight, clientHeight } = scrollContainer.value;
-  const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+  const isFollowing = scrollContainer.value.scrollTop < 50;
 
-  if (isAtBottom !== props.stickToBottom) {
-    emit('update:stickToBottom', isAtBottom);
+  if (isFollowing !== props.stickToBottom) {
+    emit('update:stickToBottom', isFollowing);
   }
 };
 
 watch(() => props.events.length, async () => {
   if (props.stickToBottom) {
     await nextTick();
-    scrollToBottom();
+    scrollToNewest();
   }
 });
 
-watch(() => props.stickToBottom, (shouldStick) => {
-  if (shouldStick) {
-    scrollToBottom();
+watch(() => props.stickToBottom, (shouldFollow) => {
+  if (shouldFollow) {
+    scrollToNewest();
   }
 });
 </script>
@@ -205,27 +172,6 @@ watch(() => props.stickToBottom, (shouldStick) => {
 .tl-head .live { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-2xs); color: var(--text-muted); flex: none; }
 .tl-head .live .ld { width: 5px; height: 5px; border-radius: 50%; background: var(--theme-accent-success); }
 .tl-head .live.off .ld { background: var(--text-ghost); }
-
-/* Agent chips */
-.agent-chips {
-  display: flex; flex-wrap: wrap; gap: 6px;
-  padding: 9px 16px; border-bottom: 1px solid var(--hair-faint);
-  flex: none;
-}
-.chip-agent {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 3px 9px; border-radius: var(--radius-full);
-  border: 1px solid color-mix(in srgb, var(--c) 42%, transparent);
-  background: color-mix(in srgb, var(--c) 12%, transparent);
-  color: var(--text-base); cursor: pointer;
-  font-size: var(--text-xs);
-  transition: background var(--motion-fast), border-color var(--motion-fast), opacity var(--motion-fast);
-}
-.chip-agent:hover { border-color: color-mix(in srgb, var(--c) 70%, transparent); }
-.chip-agent .cdot { width: 7px; height: 7px; border-radius: 50%; background: var(--c); flex: none; }
-.chip-agent.sleeping { opacity: 0.5; background: transparent; }
-.chip-agent.sleeping .cdot { background: transparent; border: 1.5px solid var(--c); }
-.chip-agent .mono { font-size: var(--text-xs); }
 
 /* Search */
 .search-wrap { padding: 10px 16px; border-bottom: 1px solid var(--hair-faint); flex: none; }
@@ -262,7 +208,7 @@ watch(() => props.stickToBottom, (shouldStick) => {
 .empty-title { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--text-base); margin: 0 0 4px; }
 .empty-sub { font-size: var(--text-sm); color: var(--text-faint); margin: 0; }
 
-/* TransitionGroup */
+/* TransitionGroup — new rows slide in from the top */
 .event-enter-active, .event-leave-active { transition: opacity 0.28s var(--ease-out), transform 0.28s var(--ease-out); }
 .event-enter-from { opacity: 0; transform: translateY(-10px); }
 .event-leave-to { opacity: 0; transform: translateY(8px); }

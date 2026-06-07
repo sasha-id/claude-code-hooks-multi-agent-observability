@@ -81,8 +81,7 @@ onUnmounted(() => {
 <style scoped>
 .toast {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 16px;
   z-index: 50;
   display: flex;
   align-items: center;
@@ -170,10 +169,10 @@ onUnmounted(() => {
 }
 .toast-enter-from {
   opacity: 0;
-  transform: translate(-50%, -12px);
+  transform: translateX(16px);
 }
 .toast-leave-to {
   opacity: 0;
-  transform: translate(-50%, -12px);
+  transform: translateX(16px);
 }
 </style>

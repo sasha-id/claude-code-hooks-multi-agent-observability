@@ -75,10 +75,7 @@
           <EventTimeline
             :events="events"
             :filters="filters"
-            :unique-app-names="uniqueAppNames"
-            :all-app-names="allAppNames"
             v-model:stick-to-bottom="stickToBottom"
-            @select-agent="toggleAgentLane"
           />
         </div>
       </section>
@@ -92,6 +89,11 @@
           @update-all-apps="allAppNames = $event"
           @update-time-range="currentTimeRange = $event"
           @update-metrics="metrics = $event"
+        />
+        <AgentChips
+          :unique-app-names="uniqueAppNames"
+          :all-app-names="allAppNames"
+          @select-agent="toggleAgentLane"
         />
         <div v-if="selectedAgentLanes.length > 0" class="lanes-wrap">
           <AgentSwimLaneContainer
@@ -157,6 +159,7 @@ import ThemeManager from './components/ThemeManager.vue';
 import ToastNotification from './components/ToastNotification.vue';
 import AgentSwimLaneContainer from './components/AgentSwimLaneContainer.vue';
 import MetricsBar from './components/MetricsBar.vue';
+import AgentChips from './components/AgentChips.vue';
 import AppIcon from './components/AppIcon.vue';
 import { WS_URL } from './config';
 
