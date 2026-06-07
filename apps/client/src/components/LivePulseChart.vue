@@ -113,6 +113,7 @@ const emit = defineEmits<{
   updateUniqueApps: [appNames: string[]];
   updateAllApps: [appNames: string[]];
   updateTimeRange: [timeRange: TimeRange];
+  updateMetrics: [metrics: { totalEvents: number; toolCalls: number; avgGap: number; minGap: number; maxGap: number }];
 }>();
 
 const canvas = ref<HTMLCanvasElement>();
@@ -179,6 +180,17 @@ const chartAriaLabel = computed(() => {
   const rangeText = timeRange.value === '1m' ? '1 minute' : timeRange.value === '3m' ? '3 minutes' : timeRange.value === '5m' ? '5 minutes' : '10 minutes';
   return `Activity chart showing ${totalEventCount.value} events over the last ${rangeText}`;
 });
+
+// Additive: surface the window metrics to the parent so they can be rendered in
+// the redesigned MetricsBar (left column) instead of as in-chart chips.
+const metricsPayload = computed(() => ({
+  totalEvents: totalEventCount.value,
+  toolCalls: toolCallCount.value,
+  avgGap: eventTimingMetrics.value.avgGap,
+  minGap: eventTimingMetrics.value.minGap,
+  maxGap: eventTimingMetrics.value.maxGap,
+}));
+watch(metricsPayload, (m) => emit('updateMetrics', m), { immediate: true, deep: true });
 
 const tooltip = ref({
   visible: false,
