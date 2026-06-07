@@ -341,7 +341,7 @@ onUnmounted(() => {
 /* ───────── BODY ───────── */
 .body {
   display: grid;
-  grid-template-columns: minmax(560px, 1.45fr) minmax(460px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 500px);
   gap: 1px;
   background: var(--hair-faint);
   min-height: 0;
