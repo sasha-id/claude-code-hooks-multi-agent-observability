@@ -203,6 +203,19 @@ const toolInfo = computed(() => {
     };
   }
 
+  // Handle Stop / SubagentStop — surface the final assistant message as the row detail
+  if (props.event.hook_event_type === 'Stop' || props.event.hook_event_type === 'SubagentStop') {
+    const msg = payload.last_assistant_message;
+    if (typeof msg === 'string' && msg.trim()) {
+      const flat = msg.replace(/\s+/g, ' ').trim();
+      return {
+        tool: props.event.hook_event_type === 'SubagentStop' ? 'Subagent:' : 'Response:',
+        detail: flat.slice(0, 100) + (flat.length > 100 ? '...' : '')
+      };
+    }
+    return null;
+  }
+
   // Handle tool-based events
   if (payload.tool_name) {
     const info: { tool: string; detail?: string } = { tool: payload.tool_name };
