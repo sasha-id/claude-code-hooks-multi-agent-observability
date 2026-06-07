@@ -126,7 +126,7 @@ onUnmounted(() => {
 }
 .aname {
   color: var(--text-strong);
-  font-size: var(--text-base);
+  font-size: var(--text-body);
   font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }

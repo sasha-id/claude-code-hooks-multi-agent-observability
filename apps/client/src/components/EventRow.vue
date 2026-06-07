@@ -449,7 +449,7 @@ const submitChoice = async (choice: string) => {
   padding: var(--row-pad-y) 14px var(--row-pad-y) 18px;
   border-bottom: 1px solid var(--hair-faint);
   cursor: pointer;
-  font-size: var(--text-base);
+  font-size: var(--text-body);
   transition: background var(--motion-fast) var(--ease-out);
 }
 .row:hover { background: var(--surface-hover); }

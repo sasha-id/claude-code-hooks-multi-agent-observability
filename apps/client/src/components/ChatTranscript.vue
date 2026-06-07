@@ -332,7 +332,7 @@ const copyMessage = async (index: number, _type: string) => {
 .msg-parts { display: flex; flex-direction: column; gap: var(--space-2); }
 .msg-text {
   margin: 0;
-  font-size: var(--text-base); line-height: var(--leading-normal);
+  font-size: var(--text-body); line-height: var(--leading-normal);
   color: var(--text-base); white-space: pre-wrap; word-break: break-word;
 }
 
